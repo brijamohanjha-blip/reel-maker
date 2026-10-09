@@ -1,0 +1,5 @@
+.DS_Store
+node_modules/
+studio-template/node_modules/
+studio-template/out/*
+!studio-template/out/.gitkeep

@@ -1,0 +1,7 @@
+{
+  "title": "Example (no assets)",
+  "scenes": [
+    {"start": 0, "end": 3, "text": "Your hook goes here"},
+    {"start": 3, "end": 6, "text": ""}
+  ]
+}

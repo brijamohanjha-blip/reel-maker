@@ -1,0 +1,28 @@
+{
+  "name": "skincare-reels",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "studio": "remotion studio --props=reels/sunscreen-indoors.json",
+    "render": "node scripts/render.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@mediabunny/server": "1.56.1",
+    "@remotion/captions": "4.0.534",
+    "@remotion/cli": "4.0.534",
+    "@remotion/google-fonts": "4.0.534",
+    "@remotion/media": "4.0.534",
+    "@remotion/whisper-webgpu": "4.0.534",
+    "mediabunny": "1.56.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.534"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "ffmpeg-static": "^5.2.0",
+    "typescript": "5.9.3"
+  }
+}
