@@ -20,12 +20,13 @@ const calculateMetadata: CalculateMetadataFunction<ReelProps> = async ({props}) 
     throw new Error(`Captions file "${props.captions}" not found in public/.`);
   }
   return {
-    // The end card is always appended after the last scene, so no Reel can ship without it.
-    durationInFrames: Math.round((lastEnd + END_CARD_SECONDS) * FPS),
+    // The end card, when on, is appended after the last scene.
+    durationInFrames: Math.round((lastEnd + (props.endCard === false ? 0 : END_CARD_SECONDS)) * FPS),
     props: {
       ...props,
       resolved: {
         audio: existsInPublic(props.audio),
+        music: existsInPublic(props.music),
         videos: props.scenes.map((s) => existsInPublic(s.video)),
         captions,
       },

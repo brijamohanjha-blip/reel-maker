@@ -5,6 +5,7 @@
 //   jobs/<slug>/plan.json                      beats: [{id, script, onScreenText?, clip: {prompt, seconds}}]
 //   public/jobs/<slug>/voiceover.mp3           the ElevenLabs audio
 //   public/jobs/<slug>/captions.json           from align-captions.mjs
+//   public/jobs/<slug>/music.mp3               optional, from make-music.mjs (only if the user asked for music)
 //   public/jobs/<slug>/clips/scene-<id>.mp4    optional per beat (falls back to a soft gradient)
 import {execFileSync} from 'node:child_process';
 import {existsSync, readFileSync, writeFileSync} from 'node:fs';
@@ -40,7 +41,9 @@ if (wordIndex !== captions.length) {
   throw new Error(`Beats have ${wordIndex} words but captions have ${captions.length}. Re-run align-captions with script.txt.`);
 }
 const lastWordEnd = captions[captions.length - 1].endMs / 1000;
-const end = Math.max(audioSeconds ?? 0, lastWordEnd) + 0.4;
+// With an end card the last scene holds 0.4 s after the voice; without one it holds 1.2 s and fades out.
+const endCard = plan.endCard === true;
+const end = Math.max(audioSeconds ?? 0, lastWordEnd) + (endCard ? 0.4 : 1.2);
 
 const warnings = [];
 const scenes = plan.beats.map((beat, i) => {
@@ -62,8 +65,10 @@ const reel = {
   title: plan.title,
   audio: `${pub}/voiceover.mp3`,
   captions: `${pub}/captions.json`,
-  ...(plan.endCardText ? {endCardText: plan.endCardText} : {}),
+  ...(existsSync(`public/${pub}/music.mp3`) ? {music: `${pub}/music.mp3`} : {}),
+  endCard,
+  ...(endCard && plan.endCardText ? {endCardText: plan.endCardText} : {}),
   scenes,
 };
 writeFileSync(`reels/${slug}.json`, JSON.stringify(reel, null, 2) + '\n');
-console.log(JSON.stringify({reel: `reels/${slug}.json`, audioSeconds, totalSeconds: +(end + 2).toFixed(2), scenes: scenes.map((s) => [s.start, s.end]), warnings}, null, 1));
+console.log(JSON.stringify({reel: `reels/${slug}.json`, audioSeconds, totalSeconds: +(end + (endCard ? 2 : 0)).toFixed(2), scenes: scenes.map((s) => [s.start, s.end]), warnings}, null, 1));

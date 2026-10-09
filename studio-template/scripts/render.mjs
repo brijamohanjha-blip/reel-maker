@@ -30,14 +30,26 @@ execFileSync(
 const frameCount = readdirSync(framesDir).filter((f) => f.endsWith('.jpeg')).length;
 const audio = reel.audio ? join('public', reel.audio.replace(/^\/+/, '').replace(/^public\//, '')) : null;
 const hasAudio = audio && existsSync(audio);
+const music = reel.music ? join('public', reel.music.replace(/^\/+/, '').replace(/^public\//, '')) : null;
+const hasMusic = music && existsSync(music);
 console.log(hasAudio ? `Adding voiceover: ${audio}` : 'No voiceover file found: rendering without audio.');
+if (hasMusic) console.log(`Adding music: ${music}`);
+
+// Voice at full level; music is pre-leveled by make-music.mjs, so mix without normalizing.
+const audioArgs = [];
+if (hasAudio && hasMusic) {
+  audioArgs.push('-i', audio, '-i', music, '-filter_complex', '[1:a][2:a]amix=inputs=2:duration=longest:normalize=0[a]', '-map', '0:v', '-map', '[a]');
+} else if (hasAudio || hasMusic) {
+  audioArgs.push('-i', hasAudio ? audio : music);
+}
+if (hasAudio || hasMusic) audioArgs.push('-c:a', 'aac', '-b:a', '192k');
 
 execFileSync(
   ffmpeg,
   [
     '-v', 'error', '-y',
     '-framerate', '30', '-pattern_type', 'glob', '-i', join(framesDir, 'element-*.jpeg'),
-    ...(hasAudio ? ['-i', audio, '-c:a', 'aac', '-b:a', '192k'] : []),
+    ...audioArgs,
     '-t', String(frameCount / 30),
     '-c:v', 'libx264', '-crf', '18', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
     outFile,

@@ -1,4 +1,16 @@
-# Writing clip prompts
+# Clips
+
+## Stock search terms (Pixabay / Pexels, the default)
+
+For centre-cropped landscape clips (marked "crop"), check that the subject sits in the middle third of the frame.
+
+- 2-3 terms per beat, 2-4 words each, describing what's *visible*, not the idea: "cream texture macro", not "moisturiser benefits".
+- Lead with the subject, add a look word for mood: "macro", "slow motion", "close up", "dark", "sunlight".
+- Prefer objects, textures, light and places over people. Searches about skin or face routines return mostly faces; for those beats try textures ("foam bubbles macro", "cream swirl") or hands ("hands washing water").
+- Keep one mood across the Reel (e.g. all soft, warm light) so the cuts feel like one video.
+- Example: hook "season change" → "autumn leaves window", "season change light"; dry air → "water droplets macro", "mist slow motion dark"; sunscreen → "sunlight through window", "winter sun rays"; dermatologist → "clinic desk clipboard", "doctor desk stethoscope".
+
+# Writing AI clip prompts
 
 ## Specs to state for every clip
 

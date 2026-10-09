@@ -23,7 +23,7 @@ Never hardcode Reel content in components. Everything content-specific belongs i
 ## Rules (always apply)
 
 - Keep all text inside the 120px top and bottom safe margins.
-- Every Reel ends with a 2 s end card (always appended by the template). Default text "AI voice used. Not medical advice."; `endCardText` in plan.json can change the wording but never removes the card.
+- No end card by default: the disclosure ("AI voice used. Not medical advice.") goes in the Instagram caption. Set `"endCard": true` in plan.json only if the user wants it in the video (`endCardText` changes the wording).
 - No medical claims such as "cures" or "removes permanently"; hedge ("ho sakta hai", "maana jaata hai", "may help"). No dosages, no result promises.
 - Never show an AI person giving a personal testimonial. No faces of real people, no brand packaging or logos, no before/after visuals, no bald scalp.
 - No music unless the user asks.

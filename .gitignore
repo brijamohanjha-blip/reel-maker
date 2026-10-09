@@ -3,3 +3,10 @@ node_modules/
 studio-template/node_modules/
 studio-template/out/*
 !studio-template/out/.gitkeep
+
+# never commit secrets or media
+.env
+*.mp4
+*.mp3
+*.wav
+*.mov

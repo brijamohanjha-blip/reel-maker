@@ -14,13 +14,17 @@ export type ReelProps = {
   title?: string;
   /** Path relative to public/, e.g. "jobs/<slug>/voiceover.mp3". Played only if the file exists. */
   audio?: string | null;
+  /** Path relative to public/ of a background music file, pre-leveled to sit under the voice. */
+  music?: string | null;
   /** Path relative to public/ of a word-level Caption[] JSON. Shown TikTok-style along the bottom. */
   captions?: string | null;
   scenes: ReelScene[];
-  /** Overrides the end card's text (the end card itself is always shown). */
+  /** Show the 2 s disclosure end card (default true in the template; build-reel sets it from plan.json). */
+  endCard?: boolean;
+  /** Overrides the end card's text. */
   endCardText?: string;
   /** Filled in by calculateMetadata from what actually exists in public/. Never set in JSON. */
-  resolved?: {audio: string | null; videos: (string | null)[]; captions: Caption[] | null};
+  resolved?: {audio: string | null; music: string | null; videos: (string | null)[]; captions: Caption[] | null};
 };
 
 export const validateReel = (props: ReelProps): void => {
