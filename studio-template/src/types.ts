@@ -6,9 +6,14 @@ export type ReelScene = {
   end: number;
   /** Optional big on-screen text (normally only the hook). */
   text: string;
-  /** Path relative to public/ of the scene's clip (e.g. "jobs/<slug>/clips/scene-1.mp4"). Plays full-screen, muted. */
+  /** Path relative to public/ of the shot's clip (e.g. "jobs/<slug>/clips/scene-1.mp4"). Plays full-screen, muted. */
   video?: string;
+  /** Path relative to public/ of a still photo for the shot (used when there is no video). */
+  image?: string;
 };
+
+/** On-screen text card shown from start to end (seconds), independent of shot cuts. */
+export type ReelText = {start: number; end: number; text: string};
 
 export type ReelProps = {
   title?: string;
@@ -19,12 +24,14 @@ export type ReelProps = {
   /** Path relative to public/ of a word-level Caption[] JSON. Shown TikTok-style along the bottom. */
   captions?: string | null;
   scenes: ReelScene[];
+  /** On-screen text cards (one per beat that has text), spanning the beat's shots. */
+  texts?: ReelText[];
   /** Show the 2 s disclosure end card (default true in the template; build-reel sets it from plan.json). */
   endCard?: boolean;
   /** Overrides the end card's text. */
   endCardText?: string;
   /** Filled in by calculateMetadata from what actually exists in public/. Never set in JSON. */
-  resolved?: {audio: string | null; music: string | null; videos: (string | null)[]; captions: Caption[] | null};
+  resolved?: {audio: string | null; music: string | null; videos: (string | null)[]; images: (string | null)[]; captions: Caption[] | null};
 };
 
 export const validateReel = (props: ReelProps): void => {

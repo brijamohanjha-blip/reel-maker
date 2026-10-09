@@ -28,6 +28,7 @@ const calculateMetadata: CalculateMetadataFunction<ReelProps> = async ({props}) 
         audio: existsInPublic(props.audio),
         music: existsInPublic(props.music),
         videos: props.scenes.map((s) => existsInPublic(s.video)),
+        images: props.scenes.map((s) => existsInPublic(s.image)),
         captions,
       },
     },

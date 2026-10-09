@@ -10,7 +10,7 @@ You bring the idea, record the voiceover, and generate the clips with whichever 
    - the exact voiceover script to paste into ElevenLabs (or any TTS), sized to 30–50 s;
    - a beat-by-beat breakdown;
    - a numbered **fact sheet** with every claim, what to verify and which kind of source settles it. You check the facts before recording.
-2. **Script → clips.** By default Claude searches **Pixabay** (or **Pexels**) for free stock footage: for every beat it finds clips long enough for the line that give a sharp 1080×1920 frame (portrait Full HD, or 4K landscape cropped to 9:16), shows you a contact sheet per scene with its recommended pick, and downloads the ones you approve (with photographer credits). Prefer AI video? Ask for prompts instead: one per beat, with the length to generate and a shared style line.
+2. **Script → clips.** Each line is split into 1–3 s **shots** that cut on the word they show ("dry skin" shows dry skin, "cream" shows cream). By default Claude searches **Pixabay** (or **Pexels**) for free stock videos and photos: for every beat it finds clips long enough for the line that give a sharp 1080×1920 frame (portrait Full HD, or 4K landscape cropped to 9:16), shows you a contact sheet per scene with its recommended pick, and downloads the ones you approve (with photographer credits). Prefer AI video? Ask for prompts instead: one per beat, with the length to generate and a shared style line.
 3. **Audio + clips → finished Reel.** Hand back the audio and the clips. Claude:
    - transcribes the audio locally with Whisper, then aligns it to your exact script (handling misheard, merged, split and repeated words) so the captions use your spelling with real timings;
    - starts each clip on the first spoken word of its beat, with a punch-in on every cut and a slow push so the frame keeps moving;
@@ -54,8 +54,9 @@ studio-template/         Remotion project that assembles the Reel
   scripts/align-captions.mjs aligns the transcript to the exact script
   scripts/build-reel.mjs     builds the reel timeline from the plan and captions
   scripts/render.mjs         renders frames and encodes with ffmpeg-static (works on macOS < 15)
-  scripts/find-clips.mjs     searches Pixabay/Pexels per beat, makes candidate contact sheets
-  scripts/pick-clips.mjs     downloads and converts the chosen clips, writes credits
+  scripts/shots.mjs          splits beats into word-cued shots and times them from the voiceover
+  scripts/find-clips.mjs     searches Pixabay/Pexels videos + photos per shot, makes contact sheets (--only to redo a few)
+  scripts/pick-clips.mjs     downloads and converts the chosen clips/photos (crop anchor @left/@right/0-1), writes credits
   scripts/make-music.mjs     optional original ambient music bed, leveled under the voice
   scripts/contact-sheet.mjs  stills with safe margins drawn, for checking
 ```

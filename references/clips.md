@@ -1,5 +1,12 @@
 # Clips
 
+## Show what is being said (the main rule)
+
+- Every shot illustrates the words spoken during it. Skin words → skin. Product words → that texture (foam, gel, cream). Action words → the action (washing, applying, scratching, texting). Person words → that person (doctor, friend's phone).
+- Use mood shots (leaves, sky, sunlight) only while the voice talks about weather, season or time.
+- Cut on the word: a new shot starts on the noun it shows. 1-3 s shots keep the pace up; a still photo with a slow push works well for 1-2 s.
+- When literal footage doesn't exist or would be unsafe, use the closest literal texture (dry hands for dry skin, a cream jar for moisturiser) before falling back to an abstract image.
+
 ## Stock search terms (Pixabay / Pexels, the default)
 
 For centre-cropped landscape clips (marked "crop"), check that the subject sits in the middle third of the frame.

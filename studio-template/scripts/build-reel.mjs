@@ -1,24 +1,25 @@
-// Build reels/<slug>.json from a job: scenes start on the first spoken word of each beat.
+// Build reels/<slug>.json from a job: every shot starts on its cue word, every beat's on-screen text spans the beat.
 // Usage: node scripts/build-reel.mjs <slug>
 //
 // Expects:
-//   jobs/<slug>/plan.json                      beats: [{id, script, onScreenText?, clip: {prompt, seconds}}]
-//   public/jobs/<slug>/voiceover.mp3           the ElevenLabs audio
-//   public/jobs/<slug>/captions.json           from align-captions.mjs
-//   public/jobs/<slug>/music.mp3               optional, from make-music.mjs (only if the user asked for music)
-//   public/jobs/<slug>/clips/scene-<id>.mp4    optional per beat (falls back to a soft gradient)
+//   jobs/<slug>/plan.json                         beats (see shots.mjs for shots and cues)
+//   public/jobs/<slug>/voiceover.mp3              the ElevenLabs audio
+//   public/jobs/<slug>/captions.json              from align-captions.mjs
+//   public/jobs/<slug>/clips/scene-<shot>.mp4|jpg optional per shot (falls back to a soft gradient)
+//   public/jobs/<slug>/music.mp3                  optional, from make-music.mjs (only if the user asked for music)
 import {execFileSync} from 'node:child_process';
-import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, writeFileSync} from 'node:fs';
 import ffmpeg from 'ffmpeg-static';
+import {loadJob, planShots} from './shots.mjs';
 
 const slug = process.argv[2];
 if (!slug) {
   console.error('Usage: node scripts/build-reel.mjs <slug>');
   process.exit(1);
 }
-const plan = JSON.parse(readFileSync(`jobs/${slug}/plan.json`, 'utf8'));
+const {plan, captions} = loadJob(slug);
+if (!captions) throw new Error(`public/jobs/${slug}/captions.json is missing: run transcribe and align-captions first.`);
 const pub = `jobs/${slug}`;
-const captions = JSON.parse(readFileSync(`public/${pub}/captions.json`, 'utf8'));
 
 const probe = (file) => {
   try {
@@ -31,34 +32,49 @@ const probe = (file) => {
 };
 const audioSeconds = probe(`public/${pub}/voiceover.mp3`);
 
-let wordIndex = 0;
-const starts = plan.beats.map((beat, i) => {
-  const at = i === 0 ? 0 : captions[wordIndex].startMs / 1000;
-  wordIndex += beat.script.trim().split(/\s+/).length;
-  return at;
-});
-if (wordIndex !== captions.length) {
-  throw new Error(`Beats have ${wordIndex} words but captions have ${captions.length}. Re-run align-captions with script.txt.`);
-}
-const lastWordEnd = captions[captions.length - 1].endMs / 1000;
-// With an end card the last scene holds 0.4 s after the voice; without one it holds 1.2 s and fades out.
+// With an end card the last shot holds 0.4 s after the voice; without one it holds 1.2 s and fades out.
 const endCard = plan.endCard === true;
+const lastWordEnd = captions[captions.length - 1].endMs / 1000;
 const end = Math.max(audioSeconds ?? 0, lastWordEnd) + (endCard ? 0.4 : 1.2);
+const {shots} = planShots(plan, captions, end);
 
+const r2 = (x) => +x.toFixed(2);
 const warnings = [];
-const scenes = plan.beats.map((beat, i) => {
-  const start = +starts[i].toFixed(2);
-  const sceneEnd = +(i + 1 < starts.length ? starts[i + 1] : end).toFixed(2);
-  const clip = `${pub}/clips/scene-${beat.id}.mp4`;
-  const scene = {start, end: sceneEnd, text: beat.onScreenText ?? ''};
-  if (existsSync(`public/${clip}`)) {
-    scene.video = clip;
-    const len = probe(`public/${clip}`);
-    if (len && len < sceneEnd - start - 0.05) warnings.push(`scene-${beat.id}.mp4 is ${len.toFixed(1)}s but the scene is ${(sceneEnd - start).toFixed(1)}s: it will loop.`);
+const scenes = shots.map((s) => {
+  const scene = {start: r2(s.start), end: r2(s.end), text: ''};
+  const mp4 = `${pub}/clips/scene-${s.id}.mp4`;
+  const jpg = `${pub}/clips/scene-${s.id}.jpg`;
+  if (existsSync(`public/${mp4}`)) {
+    scene.video = mp4;
+    const len = probe(`public/${mp4}`);
+    if (len && len < s.end - s.start - 0.05) warnings.push(`scene-${s.id}.mp4 is ${len.toFixed(1)}s but the shot is ${(s.end - s.start).toFixed(1)}s: it will loop.`);
+  } else if (existsSync(`public/${jpg}`)) {
+    scene.image = jpg;
   } else {
-    warnings.push(`scene-${beat.id}.mp4 missing: using the soft gradient fallback.`);
+    warnings.push(`scene-${s.id} missing (no .mp4 or .jpg): using the soft gradient fallback.`);
   }
   return scene;
+});
+
+// On-screen text lives per beat, across all of that beat's shots. `onScreenCue` (words from the beat) delays it
+// until those words are spoken, so a card never appears before its idea is mentioned.
+const norm = (w) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+const texts = [];
+let wordOffset = 0;
+plan.beats.forEach((beat) => {
+  const tokens = beat.script.trim().split(/\s+/).map(norm);
+  const own = shots.filter((s) => s.beatId === beat.id);
+  if (beat.onScreenText) {
+    let start = own[0].start;
+    if (beat.onScreenCue) {
+      const cue = beat.onScreenCue.trim().split(/\s+/).map(norm);
+      const idx = tokens.findIndex((_, i) => cue.every((c, j) => tokens[i + j] === c));
+      if (idx < 0) throw new Error(`Beat ${beat.id}: onScreenCue "${beat.onScreenCue}" is not in the beat's script.`);
+      if (wordOffset + idx > 0) start = captions[wordOffset + idx].startMs / 1000;
+    }
+    texts.push({start: r2(start), end: r2(own[own.length - 1].end), text: beat.onScreenText});
+  }
+  wordOffset += tokens.length;
 });
 
 const reel = {
@@ -69,6 +85,19 @@ const reel = {
   endCard,
   ...(endCard && plan.endCardText ? {endCardText: plan.endCardText} : {}),
   scenes,
+  texts,
 };
 writeFileSync(`reels/${slug}.json`, JSON.stringify(reel, null, 2) + '\n');
-console.log(JSON.stringify({reel: `reels/${slug}.json`, audioSeconds, totalSeconds: +(end + (endCard ? 2 : 0)).toFixed(2), scenes: scenes.map((s) => [s.start, s.end]), warnings}, null, 1));
+console.log(
+  JSON.stringify(
+    {
+      reel: `reels/${slug}.json`,
+      audioSeconds,
+      totalSeconds: r2(end + (endCard ? 2 : 0)),
+      shots: shots.map((s, i) => `${s.id} ${scenes[i].start}-${scenes[i].end}s ${scenes[i].video ? 'video' : scenes[i].image ? 'photo' : 'MISSING'}`),
+      warnings,
+    },
+    null,
+    1,
+  ),
+);
